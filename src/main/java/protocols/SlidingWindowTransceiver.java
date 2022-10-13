@@ -15,10 +15,11 @@ public abstract class SlidingWindowTransceiver {
     }
 
     protected int getInt32FromByteArray(byte[] data) {
-        int value = data[0];
-        value |= ((int) data[1]) << 8;
-        value |= ((int) data[2]) << 16;
-        value |= ((int) data[3]) << 24;
+        // 确保字节转换为int32后高24位清零
+        int value = ((int) data[0]) & 0xFF;
+        value |= (((int) data[1]) & 0xFF) << 8;
+        value |= (((int) data[2]) & 0xFF) << 16;
+        value |= (((int) data[3]) & 0xFF) << 24;
         return value;
     }
 

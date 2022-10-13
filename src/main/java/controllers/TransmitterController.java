@@ -19,13 +19,40 @@ public class TransmitterController {
     private List<byte[]> getPacketData(String s, int packetSize) {
         List<byte[]> packetData = new ArrayList<>();
         int packetCount = ((s.length() - 1) / packetSize + 1);
-        for (int i = 0; i < packetCount; i++) {
+        for (int i = 0; i < packetCount-1; i++) {
             byte[] bytes = new byte[packetSize];
             for (int j = 0; j < packetSize; j++) {
                 bytes[j] = (byte) s.charAt(i * packetSize + j);
             }
             packetData.add(bytes);
         }
+
+        byte[] lastBytes = new byte[s.length()%packetSize];
+        for(int i=0;i<s.length()%packetSize;i++){
+            lastBytes[i]=(byte)s.charAt((packetCount-1)*packetSize+i);
+        }
+        packetData.add(lastBytes);
+
+        return packetData;
+    }
+
+    private List<byte[]> getPacketData(byte[] allBytes, int packetSize) {
+        List<byte[]> packetData = new ArrayList<>();
+        int packetCount = ((allBytes.length - 1) / packetSize + 1);
+        for (int i = 0; i < packetCount-1; i++) {
+            byte[] bytes = new byte[packetSize];
+            System.arraycopy(allBytes,i*packetSize,bytes,0,packetSize);
+            packetData.add(bytes);
+        }
+
+        byte[] lastBytes = new byte[allBytes.length%packetSize];
+        System.arraycopy(allBytes,
+                (packetCount-1)*packetSize,
+                lastBytes,
+                0,
+                allBytes.length%packetSize);
+        packetData.add(lastBytes);
+
         return packetData;
     }
 
@@ -71,16 +98,16 @@ public class TransmitterController {
                                int windowSize,
                                int owtMs,
                                int maxDelayMs) {
-        String fileContent;
+        byte[] fileBytes;
 
         try {
-            fileContent = Files.readString(Path.of(fileName));
+            fileBytes = Files.readAllBytes(Path.of(fileName));
         } catch (IOException e) {
             e.printStackTrace();
             return;
         }
 
-        var packetData = getPacketData(fileContent, Constants.DATA_BUFFER_SIZE - 10);
+        var packetData = getPacketData(fileBytes, Constants.DATA_BUFFER_SIZE - 10);
 
         srTransceiver.sendPackets(
                 packetData, 0, atPort, toPort, windowSize, owtMs, maxDelayMs);
