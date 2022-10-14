@@ -68,4 +68,23 @@ public class ReceiverController {
             e.printStackTrace();
         }
     }
+
+    public void receiveFileWithGbn(String fileName,
+                                  int owtMs) {
+        var receivedData =
+                gbnTransceiver.receivePackets(
+                        0, atPort, owtMs);
+
+        byte[] bytes=new byte[receivedData.size()];
+
+        for(int i=0;i<receivedData.size();i++){
+            bytes[i]=receivedData.get(i);
+        }
+
+        try {
+            Files.write(Path.of(fileName),bytes);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 }

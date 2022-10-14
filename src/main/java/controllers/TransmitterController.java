@@ -27,9 +27,10 @@ public class TransmitterController {
             packetData.add(bytes);
         }
 
-        byte[] lastBytes = new byte[s.length()%packetSize];
-        for(int i=0;i<s.length()%packetSize;i++){
-            lastBytes[i]=(byte)s.charAt((packetCount-1)*packetSize+i);
+        int lastByteCount=s.length()-(packetCount-1)*packetSize;
+        byte[] lastBytes = new byte[lastByteCount];
+        for(int i=0;i<lastByteCount;i++){
+            lastBytes[i]=(byte)s.charAt(s.length()-lastByteCount+i);
         }
         packetData.add(lastBytes);
 
@@ -45,12 +46,13 @@ public class TransmitterController {
             packetData.add(bytes);
         }
 
-        byte[] lastBytes = new byte[allBytes.length%packetSize];
+        int lastByteCount=allBytes.length-(packetCount-1)*packetSize;
+        byte[] lastBytes = new byte[lastByteCount];
         System.arraycopy(allBytes,
-                (packetCount-1)*packetSize,
+                allBytes.length-lastByteCount,
                 lastBytes,
                 0,
-                allBytes.length%packetSize);
+                lastByteCount);
         packetData.add(lastBytes);
 
         return packetData;
@@ -110,6 +112,26 @@ public class TransmitterController {
         var packetData = getPacketData(fileBytes, Constants.DATA_BUFFER_SIZE - 10);
 
         srTransceiver.sendPackets(
+                packetData, 0.2, atPort, toPort, windowSize, owtMs, maxDelayMs);
+        System.gc();
+    }
+
+    public void sendFileWithGbn(String fileName,
+                               int windowSize,
+                               int owtMs,
+                               int maxDelayMs) {
+        byte[] fileBytes;
+
+        try {
+            fileBytes = Files.readAllBytes(Path.of(fileName));
+        } catch (IOException e) {
+            e.printStackTrace();
+            return;
+        }
+
+        var packetData = getPacketData(fileBytes, Constants.DATA_BUFFER_SIZE - 10);
+
+        gbnTransceiver.sendPackets(
                 packetData, 0, atPort, toPort, windowSize, owtMs, maxDelayMs);
         System.gc();
     }
